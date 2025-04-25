@@ -23,4 +23,7 @@ export class QueryDto {
 
   @IsOptional()
   value?: string;
+
+  @IsOptional()
+  id?: string;
 }

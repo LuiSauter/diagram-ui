@@ -36,7 +36,7 @@ export class UserService {
 
   public async createUser(createUserDto: CreateUserDto): Promise<UsersEntity> {
     try {
-      createUserDto.password = await this.encryptPassword(createUserDto.password);
+      // createUserDto.password = await this.encryptPassword(createUserDto.password);
       await this.userRepository.save(createUserDto);
       return await this.findOneBy({ key: 'email', value: createUserDto.email });
     } catch (error) {
@@ -56,9 +56,9 @@ export class UserService {
 
   public async update(id: string, updateUserDto: UpdateUserDto): Promise<UsersEntity> {
     try {
-      if (updateUserDto.password) {
-        updateUserDto.password = await this.encryptPassword(updateUserDto.password);
-      }
+      // if (updateUserDto.password) {
+      //   updateUserDto.password = await this.encryptPassword(updateUserDto.password);
+      // }
       const user: UsersEntity = await this.findOne(id);
       const userUpdated = await this.userRepository.update(user.id, updateUserDto);
 
@@ -73,7 +73,6 @@ export class UserService {
   public async delete(id: string): Promise<ResponseMessage> {
     try {
       const user = await this.findOne(id);
-      user.isSuspended = true;
       const deletedUser = await this.userRepository.update(user.id, user);
       if (deletedUser.affected === 0) throw new BadRequestException('Usuario no eliminado.');
       return { statusCode: 200, message: 'Usuario eliminado.' };

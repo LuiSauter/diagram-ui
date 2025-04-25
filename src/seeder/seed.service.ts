@@ -21,22 +21,22 @@ export class SeedService {
       return { message: 'No se puede ejecutar seeders en producción' };
     try {
       const user: CreateUserDto = {
-        nombre: 'luis',
-        apellido: 'janco',
-        email: 'luis@gmail.com',
-        password: '123456789',
-        role: ROLES.ADMIN,
-        genero: GENDERS.MASCULINO,
+        name: 'Luis',
+        email: 'example@gmail.com',
+        avatar_url: '',
+        phone: '',
+        country_code: '+591',
+        google_id: '',
       };
       await this.userService.createUser(user);
 
       const user2: CreateUserDto = {
-        nombre: 'Maria',
-        apellido: 'Romero',
-        email: 'maria@gmail.com',
-        password: '123456789',
-        role: ROLES.BASIC,
-        genero: GENDERS.FEMENINO,
+        name: 'Sauter',
+        email: 'example@gmail.com',
+        avatar_url: '',
+        phone: '',
+        country_code: '+591',
+        google_id: '',
       };
       await this.userService.createUser(user2);
 

@@ -17,7 +17,9 @@ import { ROLES } from 'src/common/constants';
 import { checkTokenGoogleUrl } from 'src/common/constants/configuracion';
 
 interface IJwtPayload {
-  payload: jwt.JwtPayload; secret: string; expiresIn: number | string;
+  payload: jwt.JwtPayload,
+  secret: string,
+  expiresIn: number | any
 }
 
 @Injectable()
@@ -33,15 +35,15 @@ export class AuthService {
 
   public async login(email: string, password: string): Promise<any> {
     try {
-      const user = await this.userService.findOneBy({ key: 'email', value: email });
-      if (!user || !(await bcrypt.compare(password, user.password)))
-        throw new NotFoundException('Usuario o contraseña incorrectos');
+      // const user = await this.userService.findOneBy({ key: 'email', value: email });
+      // if (!user || !(await bcrypt.compare(password, user.password)))
+      //   throw new NotFoundException('Usuario o contraseña incorrectos');
 
-      if (user.isSuspended)
-        throw new NotFoundException('Cuenta suspendida, comunicate con nosotros ' + this.configService.get('APP_URL'))
+      // if (user.isSuspended)
+      //   throw new NotFoundException('Cuenta suspendida, comunicate con nosotros ' + this.configService.get('APP_URL'))
 
 
-      return this.generateJWT(user);
+      // return this.generateJWT(user);
     } catch (error) {
       handlerError(error, this.logger);
     }
@@ -69,16 +71,16 @@ export class AuthService {
 
   public async generateJWT(user: UsersEntity): Promise<any> {
     const getUser: UsersEntity = await this.userService.findOne(user.id);
-    const payload: IPayload = { sub: getUser.id, role: getUser.role };
+    const payload: IPayload = { sub: getUser.id, role: ROLES.BASIC };
     const accessToken = this.signJWT({
       payload, secret: this.configService.get('JWT_AUTH'), expiresIn: '1d'
     });
-    return { accessToken, User: getUser };
+    return { accessToken, user: getUser };
   }
 
   public async recoverPassword(email: string): Promise<any> {
     const user = await this.userService.findOneBy({ key: 'email', value: email });
-    const payload: IPayload = { sub: user.id, role: user.role };
+    const payload: IPayload = { sub: user.id, role: ROLES.BASIC };
 
     const accessToken = this.signJWT({
       payload,
@@ -164,11 +166,11 @@ export class AuthService {
   // }
 
   public async resetPassword(email: string, password: string): Promise<any> {
-    const { id } = await this.userService.findOneBy({ key: 'email', value: email, });
-    const updateUserDto: UpdateUserDto = {
-      password: password
-    };
-    return this.userService.update(id, updateUserDto);
+    // const { id } = await this.userService.findOneBy({ key: 'email', value: email, });
+    // const updateUserDto: UpdateUserDto = {
+    //   password: password
+    // };
+    // return this.userService.update(id, updateUserDto);
   }
 
   public async checkTokenGoogle(accessToken: string): Promise<any> {
@@ -190,12 +192,12 @@ export class AuthService {
       } catch (error) {
         if (error instanceof NotFoundException) {
           const createUserDto: CreateUserDto = {
-            nombre: googleUserData.given_name,
-            apellido: googleUserData.family_name,
+            name: googleUserData.given_name + ' ' + googleUserData.family_name,
             email: googleUserData.email,
-            password: '',
-            role: ROLES.BASIC,
-            genero: null,
+            avatar_url: googleUserData.picture,
+            country_code: '',
+            phone: '',
+            google_id: googleUserData.sub,
           };
           user = await this.userService.createUser(createUserDto);
         } else {

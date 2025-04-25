@@ -1,76 +1,49 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
-  IsArray,
   IsEmail,
-  IsEnum,
   IsNotEmpty,
-  IsNumber,
   IsOptional,
   IsString,
-  MinLength,
 } from 'class-validator';
-
-import { ROLES } from 'src/common/constants';
-import { GENDERS, NOTIFICACTIONS } from 'src/common/constants/configuracion';
 
 export class CreateUserDto {
   @ApiProperty({
-    example: 'John Doe',
+    example: 'Luis Gabriel Janco',
     type: String,
-    description: 'Nombre del usuario',
   })
-  @IsNotEmpty()
   @IsString()
-  @MinLength(2)
-  nombre: string;
+  @IsNotEmpty()
+  name: string;
 
   @ApiProperty({
-    example: 'John Doe',
-    type: String,
-    description: 'Apellido del usuario',
+    example: 'ejemplo@gmail.com',
+    type: String
   })
-  @IsNotEmpty()
-  @IsString()
-  @MinLength(2)
-  apellido: string;
-
-  @ApiProperty({
-    example: 'john@live.com',
-    type: String,
-    description: 'Correo electrónico del usuario',
-  })
-  @IsNotEmpty()
-  @IsString()
   @IsEmail()
+  @IsNotEmpty()
   email: string;
-
   @ApiProperty({
-    example: '123456',
+    example: '123456789',
     type: String,
-    description: 'Contraseña del usuario',
   })
-  @IsNotEmpty()
-  @IsString()
-  @MinLength(6)
-  password: string;
-
-  @ApiProperty({
-    example: 'basic',
-    enum: ROLES,
-    description: 'Rol del usuario',
-  })
-  @IsNotEmpty()
-  @IsString()
-  @IsEnum(ROLES)
-  role: ROLES;
-
-  @ApiProperty({
-    example: 'masculino',
-    type: String,
-    description: 'Genero del usuario (Opcional)',
-  })
-  @IsString()
   @IsOptional()
-  @IsEnum(GENDERS)
-  genero: GENDERS;
+  phone: string;
+  @ApiProperty({
+    example: '+51',
+    type: String,
+  })
+  @IsOptional()
+  country_code: string;
+  @ApiProperty({
+    example: 'https://example.com/avatar.jpg',
+    type: String,
+  })
+  @IsString()
+  avatar_url: string;
+  @ApiProperty({
+    example: '1234-5678-90ab-cdef12345678',
+    type: String,
+  })
+  @IsString()
+  google_id: string;
 }

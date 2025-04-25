@@ -1,9 +1,8 @@
 export interface IUser {
-  nombre: string;
-  apellido: string;
+  name: string;
   email: string;
-  password: string;
-  role: string;
-  gender: string;
-  isSuspended: boolean;
+  phone: string;
+  country_code: string;
+  avatar_url: string;
+  google_id: string;
 }

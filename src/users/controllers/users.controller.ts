@@ -12,7 +12,7 @@ import { UsersEntity } from '../entities/users.entity';
 
 @ApiTags('Users')
 @ApiBearerAuth()
-@UseGuards(AuthGuard, RolesGuard)
+@UseGuards(AuthGuard)
 @Controller('user')
 export class UsersController {
 
