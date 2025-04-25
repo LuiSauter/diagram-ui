@@ -18,6 +18,9 @@ export const EnvConfig = () => ({
   HASH_SALT: process.env.HASH_SALT || 10,
   JWT_AUTH: process.env.JWT_AUTH || 'secret',
   JWT_RECOVERY: process.env.JWT_RECOVERY || 'secret',
+  JWT_AUTH_INVITATION: process.env.JWT_AUTH_INVITATION || 'secret_invitation',
+  JWT_RECOVERY_INVITATION: process.env.JWT_RECOVERY_INVITATION || 'secret_invitation',
+
 
   GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
   GOOGLE_SECRET: process.env.GOOGLE_SECRET,

@@ -1,11 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 
 import { handlerError } from '../common/utils';
-import { ROLES } from 'src/common/constants';
-import { GENDERS } from 'src/common/constants/configuracion';
 import { UserService } from 'src/users/services/users.service';
 import { CreateUserDto } from 'src/users/dto';
 import { ConfigService } from '@nestjs/config';
+import { DataSource } from 'typeorm';
 
 @Injectable()
 export class SeedService {
@@ -14,6 +13,7 @@ export class SeedService {
 
   constructor(
     private readonly userService: UserService,
+    private dataSource: DataSource
   ) { }
 
   public async runSeeders() {
@@ -22,7 +22,7 @@ export class SeedService {
     try {
       const user: CreateUserDto = {
         name: 'Luis',
-        email: 'example@gmail.com',
+        email: 'Luis@gmail.com',
         avatar_url: '',
         phone: '',
         country_code: '+591',
@@ -32,7 +32,7 @@ export class SeedService {
 
       const user2: CreateUserDto = {
         name: 'Sauter',
-        email: 'example@gmail.com',
+        email: 'Sauter@gmail.com',
         avatar_url: '',
         phone: '',
         country_code: '+591',
@@ -43,6 +43,15 @@ export class SeedService {
       return { message: 'Seeders ejecutados correctamente' };
     } catch (error) {
       handlerError(error, this.logger);
+    }
+  }
+
+  async resetDatabase() {
+    await this.dataSource.dropDatabase();
+    await this.dataSource.synchronize();
+
+    return {
+      message: 'Base de datos reiniciada exitosamente',
     }
   }
 }

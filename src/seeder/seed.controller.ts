@@ -6,10 +6,15 @@ import { SeedService } from './seed.service';
 @ApiTags('Seeder')
 @Controller('seed')
 export class SeedController {
-  constructor(private readonly seedService: SeedService) {}
+  constructor(private readonly seedService: SeedService) { }
 
   @Get()
   public async runSeeder(): Promise<any> {
     return await this.seedService.runSeeders();
+  }
+
+  @Get('reset-db')
+  public async resetDb(): Promise<any> {
+    return await this.seedService.resetDatabase();
   }
 }

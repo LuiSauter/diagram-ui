@@ -1,5 +1,6 @@
 import { PartialType } from "@nestjs/mapped-types";
 import { ApiProperty } from "@nestjs/swagger";
+import { IsEmail, IsString } from "class-validator";
 
 export class CreateWorkspaceDto {
 
@@ -38,3 +39,31 @@ export class CreateSheetDto {
 
 }
 export class UpdateSheetDto extends PartialType(CreateSheetDto) {}
+
+export class CreateMemberDto {
+  @ApiProperty({
+    type: String,
+    example: 'example@gmail.com'
+  })
+  @IsEmail()
+  email: string;
+
+  @ApiProperty({
+    type: String,
+    example: 'edit',
+    enum: ['edit', 'view'],
+  })
+  @IsString()
+  role: string;
+}
+
+export class UpdateMemberDto extends PartialType(CreateMemberDto) {}
+
+export class SendTokenDto {
+  @ApiProperty({
+    type: String,
+    example: ''
+  })
+  @IsString()
+  token: string;
+}

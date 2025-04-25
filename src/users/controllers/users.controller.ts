@@ -3,7 +3,7 @@ import { ApiBearerAuth, ApiParam, ApiQuery, ApiTags, } from '@nestjs/swagger';
 
 import { RolesAccess } from 'src/auth/decorators/roles.decorator';
 import { AdminAccess } from 'src/auth/decorators';
-import { AuthGuard, RolesGuard } from 'src/auth/guards';
+import { AuthGuard } from 'src/auth/guards';
 import { CreateUserDto, UpdateUserDto } from '../dto';
 import { QueryDto } from 'src/common/dto/query.dto';
 import { ResponseMessage } from 'src/common/interfaces/responseMessage.interface';

@@ -16,8 +16,17 @@ export class EmailService {
             throw new Error('MAILER_EMAIL and MAILER_PASSWORD environment variables are required');
         }
         this.email = process.env.MAILER_EMAIL
+        // this.transportes = nodemailer.createTransport({
+        //     service: process.env.MAILER_SERVICE,
+        //     auth: {
+        //         user: this.email,
+        //         pass: process.env.MAILER_SECRET_KEY
+        //     }
+        // });
         this.transportes = nodemailer.createTransport({
-            service: process.env.MAILER_SERVICE,
+            host: 'smtp.gmail.com',
+            port: 587,
+            secure: false,
             auth: {
                 user: this.email,
                 pass: process.env.MAILER_SECRET_KEY

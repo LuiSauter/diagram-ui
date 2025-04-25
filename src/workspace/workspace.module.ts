@@ -13,6 +13,9 @@ import { ConfigModule } from '@nestjs/config';
 import { WorkspaceService } from './services/workspace.service';
 import { ProjectService } from './services/project.service';
 import { SheetService } from './services/sheet.service';
+// import { UserService } from 'src/users/services/users.service';
+import { AuthService } from 'src/auth/services/auth.service';
+// import { GatewayModule } from 'src/websocket/websocket.module';
 
 @Module({
   imports: [
@@ -26,10 +29,11 @@ import { SheetService } from './services/sheet.service';
       VersionEntity
     ]),
     UsersModule,
+    // GatewayModule,
     ConfigModule,
   ],
   controllers: [WorksapceController],
-  providers: [WorkspaceService, ProjectService, SheetService],
+  providers: [WorkspaceService, ProjectService, SheetService, AuthService],
   exports: [WorkspaceService, ProjectService, SheetService, TypeOrmModule],
 })
 export class WorkspaceModule { }

@@ -10,11 +10,14 @@ export class SessionParticipantsEntity extends BaseEntity {
   @Column({ type: 'varchar', length: 100, nullable: false })
   joined_at: string;
 
-  @Column({ type: 'float', nullable: true })
+  @Column({ type: 'float', nullable: true, default: 0 })
   cursor_x: number;
 
-  @Column({ type: 'float', nullable: true })
+  @Column({ type: 'float', nullable: true, default: 0 })
   cursor_y: number;
+
+  @Column({ type: 'boolean', default: false })
+  is_active: boolean;
 
   @ManyToOne(() => UsersEntity, (user) => user.session_participants, {
     onDelete: 'CASCADE',

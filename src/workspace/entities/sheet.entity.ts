@@ -1,4 +1,4 @@
-import { Column, Entity, ManyToOne, OneToMany, OneToOne } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne } from 'typeorm';
 
 import { BaseEntity } from 'src/common/entities/base.entity';
 import { ColaborationSessionEntity } from './colaboration_session.entity';
@@ -13,8 +13,9 @@ export class SheetEntity extends BaseEntity {
 
   @OneToOne(() => ColaborationSessionEntity, (colaboration_session) => colaboration_session.sheet, {
     onDelete: 'CASCADE',
-    nullable: false,
+    nullable: true,
   })
+  @JoinColumn()
   colaboration_session: ColaborationSessionEntity;
 
   @OneToMany(() => VersionEntity, (version) => version.sheet, {

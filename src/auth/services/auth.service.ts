@@ -6,7 +6,7 @@ import * as jwt from 'jsonwebtoken';
 
 import { UsersEntity } from 'src/users/entities/users.entity';
 import { UserService } from 'src/users/services/users.service';
-import { IPayload } from '../interfaces/payload.interface';
+import { IPayload, IPayloadWorkspace } from '../interfaces/payload.interface';
 import { IUserToken } from '../interfaces/userToken.interface';
 import { CreateUserDto, UpdateUserDto } from 'src/users/dto';
 import { HttpCustomService } from 'src/providers/http/http.service';
@@ -15,6 +15,7 @@ import { ROLES } from 'src/common/constants';
 // import { SendMailOptions } from 'src/providers/email/interfaces';
 // import { EmailService } from 'src/providers/email/email.service';
 import { checkTokenGoogleUrl } from 'src/common/constants/configuracion';
+import { WorkspaceEntity } from 'src/workspace/entities/workspace.entity';
 
 interface IJwtPayload {
   payload: jwt.JwtPayload,

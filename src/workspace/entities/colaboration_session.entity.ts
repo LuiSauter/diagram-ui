@@ -12,7 +12,7 @@ export class ColaborationSessionEntity extends BaseEntity {
 
   @OneToMany(() => SessionParticipantsEntity, (session_participants) => session_participants.colaboration_session, {
     onDelete: 'CASCADE',
-    nullable: false,
+    nullable: true,
   })
   session_participants: SessionParticipantsEntity[]
 

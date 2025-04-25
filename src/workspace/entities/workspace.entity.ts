@@ -18,7 +18,6 @@ export class WorkspaceEntity extends BaseEntity {
   owner: UsersEntity;
 
   @OneToMany(() => WorkspaceMemberEntity, (workspace_member) => workspace_member.workspace, {
-    onDelete: 'CASCADE',
     nullable: true,
   })
   workspace_members: WorkspaceMemberEntity[]
