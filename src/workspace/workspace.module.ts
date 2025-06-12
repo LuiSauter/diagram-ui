@@ -15,6 +15,8 @@ import { ProjectService } from './services/project.service';
 import { SheetService } from './services/sheet.service';
 // import { UserService } from 'src/users/services/users.service';
 import { AuthService } from 'src/auth/services/auth.service';
+import { UiGeneratorController } from './controllers/ai.controller';
+import { OpenAIService } from './services/openai.service';
 // import { GatewayModule } from 'src/websocket/websocket.module';
 
 @Module({
@@ -32,8 +34,8 @@ import { AuthService } from 'src/auth/services/auth.service';
     // GatewayModule,
     ConfigModule,
   ],
-  controllers: [WorksapceController],
-  providers: [WorkspaceService, ProjectService, SheetService, AuthService],
-  exports: [WorkspaceService, ProjectService, SheetService, TypeOrmModule],
+  controllers: [WorksapceController, UiGeneratorController],
+  providers: [WorkspaceService, ProjectService, SheetService, AuthService, OpenAIService],
+  exports: [WorkspaceService, ProjectService, SheetService, OpenAIService, TypeOrmModule],
 })
 export class WorkspaceModule { }

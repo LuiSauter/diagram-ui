@@ -1,6 +1,8 @@
 import { PartialType } from "@nestjs/mapped-types";
 import { ApiProperty } from "@nestjs/swagger";
-import { IsEmail, IsString } from "class-validator";
+import { Type } from "class-transformer";
+import { IsArray, IsEmail, IsIn, IsNotEmpty, IsOptional, IsString, ValidateNested } from "class-validator";
+import { CanvasElement } from "../services/openai.service";
 
 export class CreateWorkspaceDto {
 
@@ -30,6 +32,13 @@ export class CreateSheetDto {
     example: 'index',
   })
   name: string;
+
+  @ApiProperty({
+    type: String,
+    example: 'index',
+  })
+  @IsOptional()
+  breakpoint: string;
 
   @ApiProperty({
     type: String,
@@ -66,4 +75,64 @@ export class SendTokenDto {
   })
   @IsString()
   token: string;
+}
+
+export class GenerateUiTextDto {
+  @ApiProperty({
+    type: String,
+    example: 'Crea una pantalla de inicio con un botón grande y un campo de búsqueda.',
+  })
+  @IsString()
+  @IsNotEmpty()
+  prompt: string;
+
+  @ApiProperty({
+    type: String,
+    example: 'newScreen',
+    enum: ['newScreen', 'modifyExisting'],
+  })
+  @IsString()
+  @IsIn(['newScreen', 'modifyExisting'])
+  mode: 'newScreen' | 'modifyExisting';
+
+  @ApiProperty({
+    type: String,
+    example: 'main',
+    description: 'Requerido si mode es "modifyExisting". Nombre de la ruta de la pantalla a modificar.',
+    examples: ['main', 'login', 'dashboard'],
+  })
+  @IsString()
+  @IsOptional()
+  routeName?: string; // Requerido si mode es 'modifyExisting'
+
+  @ApiProperty({
+    type: [Object],
+    description: 'Requerido si mode es "modifyExisting". El árbol completo del proyecto o de la pantalla relevante.',
+  })
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => Object)
+  @IsOptional()
+  existingComponents?: CanvasElement[];
+}
+
+
+export class CreateImageDto {
+  @ApiProperty({
+    type: 'string',
+    format: 'binary',
+    description: 'Imagen',
+  })
+  image: Express.Multer.File;
+}
+
+export class ExportFlutterDto {
+  @ApiProperty({
+    type: [Object],
+    description: 'Lista de pantallas tipo CanvasElement',
+  })
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => Object)
+  canvasElement: CanvasElement[];
 }

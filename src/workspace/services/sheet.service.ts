@@ -1,8 +1,8 @@
-import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger, InternalServerErrorException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 
-import { CreateSheetDto, UpdateProjectDto } from '../dto/create-workspace.dto';
+import { CreateSheetDto, UpdateProjectDto, UpdateSheetDto } from '../dto/create-workspace.dto';
 import { getDate, handlerError } from 'src/common/utils';
 import { ResponseMessage } from 'src/common/interfaces/responseMessage.interface';
 import { WorkspaceEntity } from '../entities/workspace.entity';
@@ -15,6 +15,14 @@ import { ColaborationSessionEntity } from '../entities/colaboration_session.enti
 import { SessionParticipantsEntity } from '../entities/session_participants.entity';
 import { WebsocketGateway } from 'src/websocket/websocket.gateway';
 import { AuthService } from 'src/auth/services/auth.service';
+import { Response } from 'express';
+import * as path from 'path';
+import * as fs from 'fs/promises';
+import { createWriteStream, rmSync, unlinkSync } from 'fs';
+import * as archiver from 'archiver';
+import * as fsExtra from 'fs-extra';
+import { CanvasElement } from './openai.service';
+
 
 @Injectable()
 export class SheetService {
@@ -77,7 +85,7 @@ export class SheetService {
 
         await queryRunner.manager.save(sessionParticipants);
         await queryRunner.commitTransaction();
-        this.webSocketGateway.handleNewProject(project.workspace.id, await this.workspaceService.findOne(project.workspace.id));
+        // this.webSocketGateway.handleNewProject(project.workspace.id, await this.workspaceService.findOne(project.workspace.id));
         return {
           message: 'Sheet created successfully',
           statusCode: 201,
@@ -89,6 +97,7 @@ export class SheetService {
         throw new BadRequestException(error.message);
       } finally {
         await queryRunner.release()
+        this.webSocketGateway.handleNewProject(project.workspace.id, await this.workspaceService.findOne(project.workspace.id));
       }
     } catch (error) {
       handlerError(error, this.logger);
@@ -117,11 +126,11 @@ export class SheetService {
     }
   }
 
-  public async update(id: string, updateProjectDto: UpdateProjectDto): Promise<ResponseMessage> {
+  public async update(id: string, updateSheetDto: UpdateSheetDto): Promise<ResponseMessage> {
     try {
       const sheet = await this.sheetRepository.findOne({ where: { id } });
       if (!sheet) throw new Error('Sheet not found');
-      await this.sheetRepository.update(id, updateProjectDto);
+      await this.sheetRepository.update(id, updateSheetDto);
       return {
         message: 'Sheet updated successfully',
         statusCode: 200,
@@ -231,4 +240,209 @@ export class SheetService {
       handlerError(error, this.logger);
     }
   }
+
+  async exportarProyectoFlutter(
+    pantallas: CanvasElement[],
+    res: Response
+  ): Promise<void> {
+    try {
+      const plantillaDir = path.join(process.cwd(), 'src', 'workspace', 'sourceCode', 'flutter-template');
+      const tempDir = path.join(process.cwd(), 'temp', 'flutter-export');
+      const zipPath = `${tempDir}.zip`;
+      
+      this.logger.log({
+        plantillaDir,
+        tempDir,
+        zipPath,
+      });
+      // Limpiar archivos anteriores
+      try { rmSync(tempDir, { recursive: true, force: true }); } catch { }
+      try { unlinkSync(zipPath); } catch { }
+
+      await fsExtra.copy(plantillaDir, tempDir);
+      const libDir = path.join(tempDir, 'lib');
+      const screensDir = path.join(libDir, 'screens');
+      await fs.mkdir(screensDir, { recursive: true });
+
+      const normalizarNombre = (routeName: string) => {
+        const limpio = routeName.trim().replace(/\s+/g, '').toLowerCase();
+        const camel = routeName.replace(/\s+(\w)/g, (_, c) => c.toUpperCase()).replace(/^\w/, c => c.toUpperCase());
+        return {
+          clase: `Pantalla${camel}`,
+          file: `screen_${limpio}.dart`,
+          ruta: `/${camel}`,
+        };
+      };
+
+      const imports: string[] = [];
+      const rutas: string[] = [];
+
+      for (const pantalla of pantallas) {
+        if (!pantalla.routeName) continue;
+
+        const { clase, file, ruta } = normalizarNombre(pantalla.routeName);
+        const widgetContent = this.generarWidget(pantalla, pantallas.map(p => p.routeName));
+
+        const pantallaCode = `
+import 'package:flutter/material.dart';
+
+class ${clase} extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: SafeArea(
+        child: Padding(
+          padding: EdgeInsets.all(16),
+          child: ${widgetContent}
+        ),
+      ),
+    );
+  }
+}
+      `;
+
+        await fs.writeFile(path.join(screensDir, file), pantallaCode);
+        imports.push(`import 'screens/${file}';`);
+        rutas.push(`'${ruta}': (context) => ${clase}(),`);
+      }
+
+      const pantallaInicial = pantallas.find(p => !!p.routeName);
+      const claseInicial = pantallaInicial ? normalizarNombre(pantallaInicial.routeName).clase : 'Container';
+
+      const mainCode = `
+import 'package:flutter/material.dart';
+${imports.join('\n')}
+
+void main() {
+  runApp(const MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: ${claseInicial}(),
+      routes: {
+        ${rutas.join('\n        ')}
+      },
+    );
+  }
+}
+    `;
+      await fs.writeFile(path.join(libDir, 'main.dart'), mainCode);
+
+      // Crear ZIP
+      const output = createWriteStream(zipPath);
+      const archive = archiver('zip', { zlib: { level: 9 } });
+      archive.pipe(output);
+      archive.directory(tempDir, false);
+      await archive.finalize();
+
+      await new Promise<void>((resolve, reject) => {
+        output.on('close', resolve);
+        output.on('error', reject);
+      });
+
+      res.download(zipPath, 'output-flutter.zip', () => {
+        try { rmSync(tempDir, { recursive: true, force: true }); } catch { }
+        try { unlinkSync(zipPath); } catch { }
+      });
+
+    } catch (error) {
+      this.logger.error('[EXPORTAR] Error general', error);
+      throw new InternalServerErrorException('No se pudo exportar el proyecto Flutter.');
+    }
+  }
+
+
+  private generarWidget(rootNode: any, pantallas: string[], depth = 3): string {
+    const colorToFlutter = (color: string) => {
+      if (color?.startsWith('#')) return `Color(0xFF${color.slice(1)})`;
+      return 'Color(0xFF000000)';
+    };
+
+    const renderNode = (node: any, lvl = depth): string => {
+      const indent = '  '.repeat(lvl);
+      const style = node.style || {};
+      const props = node.properties || {};
+
+      const getChildren = (): string => {
+        if (Array.isArray(node.children)) {
+          return node.children.map((child: any) => renderNode(child, lvl + 1)).join(',\n');
+        } else if (typeof node.children === 'string') {
+          return `'${node.children}'`;
+        } else {
+          return '';
+        }
+      };
+
+      switch (node.type) {
+        case 'h1':
+        case 'label':
+        case 'p':
+          return `${indent}Text(
+${indent}  ${getChildren()},
+${indent}  style: TextStyle(
+${indent}    fontSize: ${parseFloat(style.fontSize?.replace('rem', '') || '1')} * 16,
+${indent}    fontWeight: FontWeight.${style.fontWeight === 'bold' ? 'bold' : 'normal'},
+${indent}    color: ${colorToFlutter(style.color || '#000000')},
+${indent}  ),
+)`;
+
+        case 'input':
+          return `${indent}TextField(
+${indent}  decoration: InputDecoration(
+${indent}    hintText: '${props.placeholder || ''}',
+${indent}    border: OutlineInputBorder(
+${indent}      borderRadius: BorderRadius.circular(${parseInt(style.borderRadius || '8px')}),
+${indent}      borderSide: BorderSide(color: ${colorToFlutter(style.borderColor || '#d1d5db')}),
+${indent}    ),
+${indent}  ),
+${indent}  controller: TextEditingController(text: '${props.defaultValue || ''}'),
+)`;
+
+        case 'button':
+          const route = node.actions?.navigateRoute;
+          const onPressed = route
+            ? `() => Navigator.pushNamed(context, '/${route}')`
+            : '() {}';
+          return `${indent}ElevatedButton(
+${indent}  onPressed: ${onPressed},
+${indent}  style: ElevatedButton.styleFrom(
+${indent}    backgroundColor: ${colorToFlutter(style.backgroundColor)},
+${indent}    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+${indent}    shape: RoundedRectangleBorder(
+${indent}      borderRadius: BorderRadius.circular(${parseInt(style.borderRadius || '8px')}),
+${indent}    ),
+${indent}  ),
+${indent}  child: Text('${node.children || 'Botón'}'),
+)`;
+
+        case 'section':
+        case 'main':
+          return `${indent}Container(
+${indent}  width: ${style.width}${style.widthUnit === '%' ? '' : '.0'},
+${indent}  height: ${style.height}${style.heightUnit === '%' ? '' : '.0'},
+${indent}  decoration: BoxDecoration(
+${indent}    color: ${colorToFlutter(style.backgroundColor || '#ffffff')},
+${indent}    border: Border.all(color: ${colorToFlutter(style.borderColor || '#d1d5db')}),
+${indent}  ),
+${indent}  child: Column(
+${indent}    crossAxisAlignment: CrossAxisAlignment.start,
+${indent}    children: [
+${getChildren()}
+${indent}    ],
+${indent}  ),
+)`;
+
+        default:
+          return `${indent}SizedBox.shrink()`;
+      }
+    };
+
+    return renderNode(rootNode, depth);
+  }
+
 }

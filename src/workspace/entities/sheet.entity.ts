@@ -29,4 +29,7 @@ export class SheetEntity extends BaseEntity {
     nullable: false,
   })
   project: ProjectEntity;
+
+  @Column({ type: 'varchar', length: 100, nullable: true })
+  breakpoint: string;
 }

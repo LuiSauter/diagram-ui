@@ -9,20 +9,24 @@ import {
   Query,
   UseGuards,
   ParseUUIDPipe,
+  HttpCode,
+  Res,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiParam, ApiProperty, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiOperation, ApiParam, ApiProperty, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 import { AuthGuard } from 'src/auth/guards';
 import { QueryDto } from 'src/common/dto/query.dto';
 import { ORDER_ENUM } from 'src/common/constants';
 import { ResponseMessage } from 'src/common/interfaces/responseMessage.interface';
 import { WorkspaceService } from '../services/workspace.service';
-import { CreateMemberDto, CreateProjectDto, CreateSheetDto, CreateWorkspaceDto, SendTokenDto } from '../dto/create-workspace.dto';
+import { CreateMemberDto, CreateProjectDto, CreateSheetDto, CreateWorkspaceDto, ExportFlutterDto, SendTokenDto, UpdateSheetDto } from '../dto/create-workspace.dto';
 import { UpdateWorkspaceDto } from '../dto/update-workspace.dto';
 import { GetUser } from 'src/users/decorators/get-user.decorator';
 import { ProjectService } from '../services/project.service';
 import { SheetService } from '../services/sheet.service';
 import { responseHandler } from 'src/common/utils';
+import { Response } from 'express';
+import { CanvasElement } from '../services/openai.service';
 
 @ApiTags('workspace')
 @Controller('workspace')
@@ -139,6 +143,23 @@ export class WorksapceController {
     })
   }
 
+  // update breakpoint on sheet
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard)
+  @Patch('sheet/:sheetId')
+  async updateSheet(
+    @Param('sheetId', ParseUUIDPipe) sheetId: string,
+    @Body() data: UpdateSheetDto,
+  ): Promise<ResponseMessage> {
+    const { breakpoint, name } = data;
+    const { data: sheet } = await this.sheetService.update(sheetId, { breakpoint, name });
+    return responseHandler({
+      message: 'Breakpoint updated successfully',
+      statusCode: 200,
+      data: sheet,
+    })
+  }
+
   @ApiBearerAuth()
   @UseGuards(AuthGuard)
   @Post(':id/invite')
@@ -218,5 +239,51 @@ export class WorksapceController {
   //     statusCode: 200
   //   })
   // }
+
+  //  @Post('exportar-flutter')
+  // async exportarFlutter(
+  //   @Body() body: any
+  // ): Promise<void> {
+  //   const data = body;
+
+  //   const pantallas: Record<string, string> = {};
+
+  //   for (const pantalla of data) {
+  //     if (!pantalla.routeName) continue;
+
+  //     // Serializa el contenido completo del nodo
+  //     pantallas[pantalla.routeName] = JSON.stringify(pantalla);
+  //   }
+
+  //   await this.workspaceService.exportarProyectoFlutter(pantallas);
+  // }
+
+  /**
+   * 🔧 Endpoint para exportar el proyecto Flutter como archivo ZIP
+   */
+  @Post('export/flutter')
+  @HttpCode(200)
+  @ApiOperation({
+    summary: 'Exportar proyecto Flutter como ZIP',
+    description: 'Recibe un conjunto de pantallas serializadas y devuelve un archivo .zip con el proyecto Flutter listo para ejecutar.',
+  })
+  // @ApiBody({
+  //   description: 'Lista de pantallas tipo CanvasElement',
+  //   type: Array,
+  //   schema: {
+  //     type: 'array',
+  //     items: { type: 'object' }, // o usar $ref si defines un DTO con Swagger decorators
+  //   },
+  // })
+  @ApiResponse({
+    status: 200,
+    description: 'Archivo ZIP generado exitosamente (respuesta como archivo)',
+  })
+  async exportFlutter(
+    @Body() exportFlutterDto: ExportFlutterDto,
+    @Res() res: Response,
+  ) {
+    return this.sheetService.exportarProyectoFlutter(exportFlutterDto.canvasElement, res);
+  }
 
 }

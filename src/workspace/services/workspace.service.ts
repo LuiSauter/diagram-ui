@@ -60,6 +60,7 @@ export class WorkspaceService {
       const { limit, offset, order, attr, value } = queryDto;
       const query = this.workspaceRepository.createQueryBuilder('workspace');
       query.leftJoinAndSelect('workspace.owner', 'owner');
+      query.leftJoinAndSelect('workspace.workspace_members', 'workspace_members');
       query.where('owner.id = :owner', { owner: idUser });
       if (limit) query.take(limit);
       if (offset) query.skip(offset);
