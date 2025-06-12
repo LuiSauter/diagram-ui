@@ -270,7 +270,7 @@ export class SheetService {
         return {
           clase: `Pantalla${camel}`,
           file: `screen_${limpio}.dart`,
-          ruta: `/${camel}`,
+          ruta: `/${camel.toLowerCase()}`,
         };
       };
 
@@ -324,6 +324,10 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       home: ${claseInicial}(),
+      theme: ThemeData(
+        scaffoldBackgroundColor: Colors.white, // Fondo blanco
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+      ),
       routes: {
         ${rutas.join('\n        ')}
       },
@@ -406,7 +410,7 @@ ${indent}  controller: TextEditingController(text: '${props.defaultValue || ''}'
         case 'button':
           const route = node.actions?.navigateRoute;
           const onPressed = route
-            ? `() => Navigator.pushNamed(context, '/${route}')`
+            ? `() => Navigator.pushNamed(context, '/${route.toLowerCase()}')`
             : '() {}';
           return `${indent}ElevatedButton(
 ${indent}  onPressed: ${onPressed},

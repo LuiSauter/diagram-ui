@@ -1,10 +1,10 @@
-name: prueba2
+name: output-diagram
 description: "A new Flutter project."
 publish_to: 'none'
-version: 1.0.0+1
+version: 0.1.0
 
 environment:
-  sdk: ^3.7.2
+  sdk: ^3.8.1
 
 dependencies:
   flutter:

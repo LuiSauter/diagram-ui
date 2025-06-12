@@ -258,23 +258,8 @@ export class WorksapceController {
   //   await this.workspaceService.exportarProyectoFlutter(pantallas);
   // }
 
-  /**
-   * 🔧 Endpoint para exportar el proyecto Flutter como archivo ZIP
-   */
   @Post('export/flutter')
   @HttpCode(200)
-  @ApiOperation({
-    summary: 'Exportar proyecto Flutter como ZIP',
-    description: 'Recibe un conjunto de pantallas serializadas y devuelve un archivo .zip con el proyecto Flutter listo para ejecutar.',
-  })
-  // @ApiBody({
-  //   description: 'Lista de pantallas tipo CanvasElement',
-  //   type: Array,
-  //   schema: {
-  //     type: 'array',
-  //     items: { type: 'object' }, // o usar $ref si defines un DTO con Swagger decorators
-  //   },
-  // })
   @ApiResponse({
     status: 200,
     description: 'Archivo ZIP generado exitosamente (respuesta como archivo)',
