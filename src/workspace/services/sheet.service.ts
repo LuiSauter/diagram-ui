@@ -385,7 +385,7 @@ class MyApp extends StatelessWidget {
           return `${indent}Text(
 ${indent}  ${getChildren()},
 ${indent}  style: TextStyle(
-${indent}    fontSize: ${parseFloat(style.fontSize?.replace('rem', '') || '1')} * 16,
+${indent}    fontSize: ${parseFloat(style?.fontSize)},
 ${indent}    fontWeight: FontWeight.${style.fontWeight === 'bold' ? 'bold' : 'normal'},
 ${indent}    color: ${colorToFlutter(style.color || '#000000')},
 ${indent}  ),
